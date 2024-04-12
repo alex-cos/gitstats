@@ -1,0 +1,4 @@
+# Ignore the followings directories or files:
+
+.scannerwork
+vendor
