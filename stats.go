@@ -110,10 +110,10 @@ func AggregByDay(statistics Statistics) Statistics {
 			}
 		}
 	}
-	min := truncateToDay(statistics[0].When)
-	max := truncateToDay(statistics[len(statistics)-1].When)
-	day := min
-	for day.UnixNano() < max.UnixNano() {
+	minimum := truncateToDay(statistics[0].When)
+	maximum := truncateToDay(statistics[len(statistics)-1].When)
+	day := minimum
+	for day.UnixNano() < maximum.UnixNano() {
 		_, ok := aggreg[day]
 		if !ok {
 			aggreg[day] = &Statistic{

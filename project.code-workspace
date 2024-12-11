@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+	],
+	"settings": {
+		"diffEditor.ignoreTrimWhitespace": false,
+		"editor.formatOnSave": true,
+		"editor.tabSize": 2,
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": "never"
+		},
+		"go.testTimeout": "30m",
+		"go.gocodeAutoBuild": true,
+		"go.autocompleteUnimportedPackages": true,
+		"go.coverOnSingleTestFile": true,
+		"go.coverOnSingleTest": true,
+		"go.addTags": {
+			"promptForTags": true
+		},
+		"go.lintTool": "golangci-lint",
+		"go.lintFlags": [
+			"--fast",
+		],
+		"go.lintOnSave": "package",
+		"go.coverMode": "count",
+		"go.coverShowCounts": true,
+		"go.delveConfig": {
+			"dlvFlags": [
+				"--check-go-version=false"
+			]
+		},
+	}
+}

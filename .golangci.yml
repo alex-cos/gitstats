@@ -15,17 +15,17 @@ run:
   # include test files or not, default is true
   tests: true
 
-  skip-dirs-use-default: true
-
-  skip-dirs:
-    - vendor
-
   allow-parallel-runners: true
+
+  go: '1.22'
 
 linters:
   enable:
+    - asasalint
     - asciicheck
+    - bidichk
     - bodyclose
+    - canonicalheader
     - containedctx
     - contextcheck
     - cyclop
@@ -33,19 +33,21 @@ linters:
     - dupl
     - durationcheck
     - errcheck
+    - errchkjson
+    - errname
     - errorlint
     - exhaustive
+ #  - exhaustruct
     - forbidigo
     - forcetypeassert
     - funlen
-  # - gochecknoglobals
+ #  - gochecknoglobals
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - godot
     - godox
-  # - gomnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -53,13 +55,17 @@ linters:
     - importas
     - ineffassign
     - lll
+    - loggercheck
     - makezero
     - misspell
+ #  - mnd
     - nakedret
     - nestif
     - nilerr
+    - nilnil
     - noctx
     - paralleltest
+    - perfsprint
     - prealloc
     - predeclared
     - protogetter
@@ -80,8 +86,8 @@ linters:
     - whitespace
   # - wrapcheck
   disable:
-    - scopelint
     - exportloopref
+    - gomnd
   presets:
     - bugs
   fast: true
@@ -131,6 +137,8 @@ linters-settings:
       - '^net/url\.URL$'
       - '^os/exec\.Cmd$'
       - '^reflect\.StructField$'
+      - 'github.com/urfave/cli/v2.*'
+      - 'github.com/wcharczuk/go-chart.*'
 
   lll:
     line-length: 120
@@ -149,9 +157,9 @@ linters-settings:
     disabled-tags:
       - experimental
 
-  gomnd:
+  mnd:
     checks: [argument,case,condition,operation,return]
-    ignored-numbers: ["0","1","2","3","4","5","10","20","32","64","100","100.0","1000","1024","2048","4096"]
+    ignored-numbers: ["0","1","2","3","4","5","8","10","16","20","32","64","100","1000","1024","2048","4096"]
     ignored-functions:
       - flag.time.*
       - flag.Arg
@@ -163,7 +171,7 @@ linters-settings:
       - os.Mkdir.*
       - os.OpenFile
       - os.WriteFile
-
+        
   exhaustive:
     check-generated: false
     default-signifies-exhaustive: true
@@ -192,11 +200,17 @@ linters-settings:
       - exchange.Err
 
 issues:
+  exclude-dirs:
+    - vendor
+    - tmp
+
   # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
   max-issues-per-linter: 0
 
   # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
   max-same-issues: 0
+
+  exclude-use-default: true
 
   exclude:
     - G306
@@ -216,12 +230,13 @@ issues:
         - gocognit
         - goconst
         - gofumpt
-        - gomnd
+        - mnd
         - gosec
         - lll
         - misspell
         - mnd
         - noctx
+        - perfsprint
 
     - path: main\.go
       linters:
@@ -241,12 +256,12 @@ issues:
         - exhaustruct
         - forcetypeassert
         - gocognit
-        - gomnd
+        - mnd
         - gosec
 
     - path: trade_params\.go
       linters:
-        - gomnd
+        - mnd
 
     # https://github.com/go-critic/go-critic/issues/926
     - linters:
@@ -259,8 +274,12 @@ issues:
       source: "^//go:generate "
 
 severity:
+  # Default value is empty string.
   default-severity: error
+  # The default value is false.
+  # If set to true severity-rules regular expressions become case sensitive.
   case-sensitive: false
+  # Default value is empty list.
   rules:
     - linters:
         - asciicheck
@@ -365,8 +384,20 @@ severity:
         - dupl
       severity: info
     - linters:
-        - gomnd
+        - mnd
       severity: info
     - linters:
         - godox
+      severity: info
+    - linters:
+        - perfsprint
+      severity: info
+    - linters:
+        - predeclared
+      severity: info
+    - linters:
+        - nilnil
+      severity: info
+    - linters:
+        - canonicalheader
       severity: info

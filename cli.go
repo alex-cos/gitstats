@@ -20,7 +20,7 @@ func parseCLI() error {
 	cliapp.Name = "gitstats"
 	cliapp.Usage = "Produces statistics for git repository"
 	cliapp.UsageText = "gitstats <command> [options]"
-	cliapp.Description = fmt.Sprintf("Build: %s", buildDate)
+	cliapp.Description = "Build: %s" + buildDate
 	cliapp.Version = version
 
 	cliapp.Flags = []cli.Flag{
