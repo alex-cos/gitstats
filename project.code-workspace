@@ -8,9 +8,6 @@
 		"diffEditor.ignoreTrimWhitespace": false,
 		"editor.formatOnSave": true,
 		"editor.tabSize": 2,
-		"editor.codeActionsOnSave": {
-			"source.fixAll.eslint": "never"
-		},
 		"go.testTimeout": "30m",
 		"go.gocodeAutoBuild": true,
 		"go.autocompleteUnimportedPackages": true,
@@ -21,7 +18,7 @@
 		},
 		"go.lintTool": "golangci-lint",
 		"go.lintFlags": [
-			"--fast",
+			"--path-mode=abs"
 		],
 		"go.lintOnSave": "package",
 		"go.coverMode": "count",
