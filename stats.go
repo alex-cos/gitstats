@@ -89,7 +89,6 @@ func ProduceStats(commits Commits) (Statistics, error) {
 }
 
 func AggregByDay(statistics Statistics) Statistics {
-	results := Statistics{}
 	aggreg := map[time.Time]*Statistic{}
 
 	for _, s := range statistics {
@@ -126,6 +125,8 @@ func AggregByDay(statistics Statistics) Statistics {
 		}
 		day = day.AddDate(0, 0, 1)
 	}
+
+	results := make(Statistics, 0, len(aggreg))
 	for _, s := range aggreg {
 		results = append(results, s)
 	}
@@ -136,7 +137,6 @@ func AggregByDay(statistics Statistics) Statistics {
 }
 
 func AggregByAuthor(statistics Statistics) Statistics {
-	results := Statistics{}
 	aggreg := map[string]*Statistic{}
 
 	for _, s := range statistics {
@@ -159,6 +159,8 @@ func AggregByAuthor(statistics Statistics) Statistics {
 			}
 		}
 	}
+
+	results := make(Statistics, 0, len(aggreg))
 	for _, s := range aggreg {
 		results = append(results, s)
 	}
@@ -207,7 +209,7 @@ func HeatMapDayHour(statistics Statistics) map[time.Weekday]map[int]*Statistic {
 		if !ok {
 			aggreg[i] = map[int]*Statistic{}
 		}
-		for j := 0; j < 24; j++ {
+		for j := range 24 {
 			_, ok := aggreg[i][j]
 			if !ok {
 				aggreg[i][j] = &Statistic{

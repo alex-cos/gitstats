@@ -3,6 +3,9 @@ package main
 import (
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func truncateToDay(t time.Time) time.Time {
@@ -10,5 +13,6 @@ func truncateToDay(t time.Time) time.Time {
 }
 
 func Capitalize(s string) string {
-	return strings.Title(strings.ToLower(strings.Trim(strings.ReplaceAll(s, "_", " "), " ")))
+	caser := cases.Title(language.AmericanEnglish)
+	return caser.String(strings.ToLower(strings.Trim(strings.ReplaceAll(s, "_", " "), " ")))
 }

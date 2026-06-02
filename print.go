@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -35,21 +36,21 @@ func PrintStatitics(statistics Statistics, timeFormat string) {
 			fields = append(fields, s.Message)
 		}
 
-		fmt.Println(strings.Join(fields, separator))
+		fmt.Fprintln(os.Stdout, strings.Join(fields, separator))
 	}
 }
 
 func PrintHeatMapDayHour(heatMap map[time.Weekday]map[int]*Statistic) {
-	fmt.Printf("Hour%s", separator)
-	for j := 0; j < 24; j++ {
-		fmt.Printf("%02d|", j)
+	fmt.Fprintf(os.Stdout, "Hour%s", separator)
+	for j := range 24 {
+		fmt.Fprintf(os.Stdout, "%02d|", j)
 	}
-	fmt.Println()
+	fmt.Fprintln(os.Stdout)
 	for i := time.Sunday; i <= time.Saturday; i++ {
-		fmt.Printf("%v%s", i, separator)
-		for j := 0; j < 24; j++ {
-			fmt.Printf("%v%s", heatMap[i][j].Commits, separator)
+		fmt.Fprintf(os.Stdout, "%v%s", i, separator)
+		for j := range 24 {
+			fmt.Fprintf(os.Stdout, "%v%s", heatMap[i][j].Commits, separator)
 		}
-		fmt.Println()
+		fmt.Fprintln(os.Stdout)
 	}
 }

@@ -32,7 +32,6 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct
     - exptostd
     - fatcontext
     - forbidigo
@@ -124,18 +123,6 @@ linters:
       # Switch statement requires default case even if exhaustive.
       # Default: false
       default-signifies-exhaustive: true
-    exhaustruct:
-      # List of regular expressions to exclude struct packages and their names from checks.
-      # Regular expressions must match complete canonical struct package/name/structname.
-      # Default: []
-      exclude:
-        - ^net/http.*
-        - ^net/url.*
-        - ^os/exec.*
-        - ^reflect\.StructField$
-        - ^crypto/tls\.Config$
-        - golang.org/.*
-        - github.com/.*
     fatcontext:
       # Check for potential fat contexts in struct pointers.
       # May generate false positives.
@@ -234,7 +221,6 @@ linters:
       - linters:
           - dogsled
           - dupl
-          - exhaustruct
           - forbidigo
           - forcetypeassert
           - funlen
@@ -259,7 +245,6 @@ linters:
         path: (.*)singleton\.go$
       - linters:
           - dupl
-          - exhaustruct
           - forcetypeassert
           - gocognit
           - gosec
@@ -341,7 +326,6 @@ severity:
         - errname
         - errorlint
         - exhaustive
-        - exhaustruct
         - exptostd
         - forbidigo
         - forcetypeassert

@@ -2,11 +2,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 var (
@@ -16,46 +17,53 @@ var (
 
 // parseCLI parses command lines arguments.
 func parseCLI() error {
-	cliapp := cli.NewApp()
-	cliapp.Name = "gitstats"
-	cliapp.Usage = "Produces statistics for git repository"
-	cliapp.UsageText = "gitstats <command> [options]"
-	cliapp.Description = "Build: %s" + buildDate
-	cliapp.Version = version
-
-	cliapp.Flags = []cli.Flag{
-		&cli.PathFlag{
-			Name:     "path",
-			Usage:    "Path to git repository containing '.git' folder",
-			Aliases:  []string{"p"},
-			Required: false,
+	appcmd := &cli.Command{
+		Name:        "gitstats",
+		Usage:       "Produces statistics for git repository",
+		UsageText:   "gitstats <command> [options]",
+		Description: "Build: " + buildDate,
+		Version:     version,
+		CommandNotFound: func(c context.Context, cmd *cli.Command, name string) {
+			fmt.Fprintf(os.Stderr, "Error. Unknown command: '%s'\n\n", name)
+			cli.ShowAppHelpAndExit(cmd, 1)
 		},
-		&cli.StringFlag{
-			Name:     "url",
-			Usage:    "URL to git repository containing",
-			Aliases:  []string{"u"},
-			Required: false,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:      "path",
+				Usage:     "Path to git repository containing '.git' folder",
+				Aliases:   []string{"p"},
+				Required:  false,
+				TakesFile: true,
+			},
+			&cli.StringFlag{
+				Name:     "url",
+				Usage:    "URL to git repository containing",
+				Aliases:  []string{"u"},
+				Required: false,
+			},
 		},
 	}
-	cliapp.CommandNotFound = func(c *cli.Context, command string) {
-		fmt.Printf("Error. Unknown command: '%s'\n\n", command)
-		cli.ShowAppHelpAndExit(c, 1)
-	}
-	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Println("Version:\t", c.App.Version)
-		fmt.Println("Build Date:\t", buildDate)
-	}
-	cliapp.Commands = []*cli.Command{
-		cmdListCommits(cliapp.Flags),
-		cmdByDay(cliapp.Flags),
-		cmdByAuthor(cliapp.Flags),
-	}
-	sort.Sort(cli.FlagsByName(cliapp.Flags))
-	sort.Sort(cli.CommandsByName(cliapp.Commands))
 
-	if err := cliapp.Run(os.Args); err != nil {
+	cli.VersionPrinter = func(cmd *cli.Command) {
+		fmt.Fprintln(os.Stdout, "Version:\t", cmd.Version)
+		fmt.Fprintln(os.Stdout, "Build Date:\t", buildDate)
+	}
+
+	appcmd.Commands = []*cli.Command{
+		cmdListCommits(appcmd.Flags),
+		cmdByDay(appcmd.Flags),
+		cmdByAuthor(appcmd.Flags),
+	}
+
+	sort.Sort(cli.FlagsByName(appcmd.Flags))
+	sort.Slice(appcmd.Commands, func(i, j int) bool {
+		return appcmd.Commands[i].Name < appcmd.Commands[j].Name
+	})
+
+	if err := appcmd.Run(context.Background(), os.Args); err != nil {
 		return fmt.Errorf("failed to parse command line arguments: %w", err)
 	}
+
 	return nil
 }
 
@@ -64,8 +72,8 @@ func cmdListCommits(flags []cli.Flag) *cli.Command {
 		Name:      "commits",
 		Usage:     "list all commits",
 		UsageText: "gitstats list <options>",
-		Action: func(c *cli.Context) error {
-			repo, err := Repository(c.Path("path"), c.String("url"))
+		Action: func(c context.Context, cmd *cli.Command) error {
+			repo, err := Repository(cmd.String("path"), cmd.String("url"))
 			if err != nil {
 				return err
 			}
@@ -89,8 +97,8 @@ func cmdByDay(flags []cli.Flag) *cli.Command {
 		Name:      "day",
 		Usage:     "aggregate git statistics by day",
 		UsageText: "gitstats day <options>",
-		Action: func(c *cli.Context) error {
-			repo, err := Repository(c.Path("path"), c.String("url"))
+		Action: func(c context.Context, cmd *cli.Command) error {
+			repo, err := Repository(cmd.String("path"), cmd.String("url"))
 			if err != nil {
 				return err
 			}
@@ -114,8 +122,8 @@ func cmdByAuthor(flags []cli.Flag) *cli.Command {
 		Name:      "author",
 		Usage:     "aggregate git statistics by author",
 		UsageText: "gitstats author <options>",
-		Action: func(c *cli.Context) error {
-			repo, err := Repository(c.Path("path"), c.String("url"))
+		Action: func(c context.Context, cmd *cli.Command) error {
+			repo, err := Repository(cmd.String("path"), cmd.String("url"))
 			if err != nil {
 				return err
 			}
