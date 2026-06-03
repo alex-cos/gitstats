@@ -41,6 +41,30 @@ func parseCLI() error {
 				Aliases:  []string{"u"},
 				Required: false,
 			},
+			&cli.TimestampFlag{
+				Name:     "since",
+				Usage:    "commits to retrieve since the given date",
+				Aliases:  []string{"after"},
+				Required: false,
+				Config: cli.TimestampConfig{
+					Layouts: []string{"2006-01-02", "2006/01/02"},
+				},
+			},
+			&cli.TimestampFlag{
+				Name:     "until",
+				Usage:    "commits to retrieve until the given date",
+				Aliases:  []string{"before"},
+				Required: false,
+				Config: cli.TimestampConfig{
+					Layouts: []string{"2006-01-02", "2006/01/02"},
+				},
+			},
+			&cli.StringFlag{
+				Name:        "sort",
+				Usage:       "sort direction ['asc' for ascending, 'desc' for descending]",
+				Required:    false,
+				DefaultText: "asc",
+			},
 		},
 	}
 
@@ -53,6 +77,8 @@ func parseCLI() error {
 		cmdListCommits(appcmd.Flags),
 		cmdByDay(appcmd.Flags),
 		cmdByAuthor(appcmd.Flags),
+		cmdHeatMap(appcmd.Flags),
+		cmdListTags(appcmd.Flags),
 	}
 
 	sort.Sort(cli.FlagsByName(appcmd.Flags))
@@ -65,79 +91,4 @@ func parseCLI() error {
 	}
 
 	return nil
-}
-
-func cmdListCommits(flags []cli.Flag) *cli.Command {
-	return &cli.Command{
-		Name:      "commits",
-		Usage:     "list all commits",
-		UsageText: "gitstats list <options>",
-		Action: func(c context.Context, cmd *cli.Command) error {
-			repo, err := Repository(cmd.String("path"), cmd.String("url"))
-			if err != nil {
-				return err
-			}
-			commits, err := retrieveCommits(repo)
-			if err != nil {
-				return err
-			}
-			statistics, err := ProduceStats(commits)
-			if err != nil {
-				return err
-			}
-			PrintStatitics(statistics, "2006-01-02T15:04:05")
-			return nil
-		},
-		Flags: flags,
-	}
-}
-
-func cmdByDay(flags []cli.Flag) *cli.Command {
-	return &cli.Command{
-		Name:      "day",
-		Usage:     "aggregate git statistics by day",
-		UsageText: "gitstats day <options>",
-		Action: func(c context.Context, cmd *cli.Command) error {
-			repo, err := Repository(cmd.String("path"), cmd.String("url"))
-			if err != nil {
-				return err
-			}
-			commits, err := retrieveCommits(repo)
-			if err != nil {
-				return err
-			}
-			statistics, err := ProduceStats(commits)
-			if err != nil {
-				return err
-			}
-			PrintStatitics(AggregByDay(statistics), "2006-01-02")
-			return nil
-		},
-		Flags: flags,
-	}
-}
-
-func cmdByAuthor(flags []cli.Flag) *cli.Command {
-	return &cli.Command{
-		Name:      "author",
-		Usage:     "aggregate git statistics by author",
-		UsageText: "gitstats author <options>",
-		Action: func(c context.Context, cmd *cli.Command) error {
-			repo, err := Repository(cmd.String("path"), cmd.String("url"))
-			if err != nil {
-				return err
-			}
-			commits, err := retrieveCommits(repo)
-			if err != nil {
-				return err
-			}
-			statistics, err := ProduceStats(commits)
-			if err != nil {
-				return err
-			}
-			PrintStatitics(AggregByAuthor(statistics), "2006-01-02")
-			return nil
-		},
-		Flags: flags,
-	}
 }

@@ -40,7 +40,6 @@ linters:
     - gocheckcompilerdirectives
     - gochecknoinits
     - gocognit
-    - goconst
     - gocritic
     - gocyclo
     - godot
@@ -73,7 +72,6 @@ linters:
     - sloglint
     - sqlclosecheck
     - staticcheck
-    #   - tagalign
     - testifylint
     - testpackage
     - thelper
@@ -82,7 +80,6 @@ linters:
     - unparam
     - wastedassign
     - whitespace
-    #   - wrapcheck
     - zerologlint
   # Disable specific linter.
   disable:
@@ -253,9 +250,6 @@ linters:
       - linters:
           - gocritic
         text: "unnecessaryDefer:"
-      - linters:
-          - lll
-        source: "^//go:generate "
       - path: (.+)\.go$
         text: G306
       - linters:
@@ -365,11 +359,3 @@ formatters:
   # Enable specific formatter.
   # Default: [] (uses standard Go formatting)
   enable: []
-  exclusions:
-    generated: lax
-    # Log a warning if an exclusion path is unused.
-    # Default: false
-    warn-unused: true
-    # Which file paths to exclude.
-    paths:
-      - "^services\\.*.go$"

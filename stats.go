@@ -6,34 +6,11 @@ import (
 	"time"
 )
 
-const TimeFormat = "2006-01-02T15:04:05"
-
 var (
-	separator    = "|"
 	excludePaths = [...]string{"public/fonts", "public/images", "node_modules", "build", "dist"}
-	AllFiles     = map[string]string{}
 )
 
-type Statistic struct {
-	When          time.Time
-	Who           string
-	Email         string
-	ID            string
-	Message       string
-	Commits       int64
-	ModifiedFiles int64
-	Additions     int64
-	Deletions     int64
-	TotalLines    int64
-	ByExt         map[string]struct {
-		Additions int64
-		Deletions int64
-	}
-}
-
-type Statistics []*Statistic
-
-func IsInexcludePaths(path string) bool {
+func IsInExcludePaths(path string) bool {
 	for _, excludePath := range excludePaths {
 		if strings.Contains(path, excludePath) {
 			return true
@@ -42,56 +19,52 @@ func IsInexcludePaths(path string) bool {
 	return false
 }
 
-func ProduceStats(commits Commits) (Statistics, error) {
-	var totalLines int64
-
-	statistics := Statistics{}
+func ProduceStats(commits Commits) *Statistics {
+	statistics := Statistics{
+		HasWhen:    true,
+		HasWho:     true,
+		HasEmail:   true,
+		HasID:      true,
+		HasMessage: true,
+		Data:       []*Statistic{},
+	}
 
 	for _, c := range commits {
 		var nbModifiedFiles, additions, deletions int64
-
-		stats, err := c.Stats()
-		if err != nil {
-			return nil, err
-		}
-
-		for _, stat := range stats {
+		for _, stat := range c.FileStats {
 			name := stat.Name
-			filename := strings.Split(name, " => ")[0]
-			if !IsInexcludePaths(filename) {
-				AllFiles[filename] = ""
+			filename, _, _ := strings.Cut(name, " => ")
+			if !IsInExcludePaths(filename) {
 				nbModifiedFiles++
 				additions += int64(stat.Addition)
 				deletions += int64(stat.Deletion)
 			}
 		}
-		totalLines += additions - deletions
 
-		statistics = append(statistics, &Statistic{
-			When:          c.Author.When,
-			Who:           strings.ToLower(c.Author.Name),
-			Email:         strings.ToLower(c.Author.Email),
-			ID:            c.ID().String(),
+		statistics.Data = append(statistics.Data, &Statistic{
+			When:          c.When,
+			Who:           c.Who,
+			Email:         c.Email,
+			ID:            c.ID,
 			Message:       c.Message,
 			Commits:       1,
 			ModifiedFiles: nbModifiedFiles,
 			Additions:     additions,
 			Deletions:     deletions,
-			TotalLines:    totalLines,
 		})
 	}
 
-	sort.Slice(statistics, func(i, j int) bool {
-		return (statistics[i].When.UnixNano() < statistics[j].When.UnixNano())
+	sort.Slice(statistics.Data, func(i, j int) bool {
+		return (statistics.Data[i].When.UnixNano() < statistics.Data[j].When.UnixNano())
 	})
 
-	return statistics, nil
+	return &statistics
 }
 
-func AggregByDay(statistics Statistics) Statistics {
+func AggregByDay(statistics *Statistics) *Statistics {
 	aggreg := map[time.Time]*Statistic{}
 
-	for _, s := range statistics {
+	for _, s := range statistics.Data {
 		day := truncateToDay(s.When)
 		_, ok := aggreg[day]
 		if ok {
@@ -109,8 +82,8 @@ func AggregByDay(statistics Statistics) Statistics {
 			}
 		}
 	}
-	minimum := truncateToDay(statistics[0].When)
-	maximum := truncateToDay(statistics[len(statistics)-1].When)
+	minimum := truncateToDay(statistics.Data[0].When)
+	maximum := truncateToDay(statistics.Data[len(statistics.Data)-1].When)
 	day := minimum
 	for day.UnixNano() < maximum.UnixNano() {
 		_, ok := aggreg[day]
@@ -126,20 +99,27 @@ func AggregByDay(statistics Statistics) Statistics {
 		day = day.AddDate(0, 0, 1)
 	}
 
-	results := make(Statistics, 0, len(aggreg))
-	for _, s := range aggreg {
-		results = append(results, s)
+	results := Statistics{
+		HasWhen:    true,
+		HasWho:     false,
+		HasEmail:   false,
+		HasID:      false,
+		HasMessage: false,
+		Data:       []*Statistic{},
 	}
-	sort.Slice(results, func(i, j int) bool {
-		return (results[i].When.UnixNano() < results[j].When.UnixNano())
+	for _, s := range aggreg {
+		results.Data = append(results.Data, s)
+	}
+	sort.Slice(results.Data, func(i, j int) bool {
+		return (results.Data[i].When.UnixNano() < results.Data[j].When.UnixNano())
 	})
-	return results
+	return &results
 }
 
-func AggregByAuthor(statistics Statistics) Statistics {
+func AggregByAuthor(statistics *Statistics) *Statistics {
 	aggreg := map[string]*Statistic{}
 
-	for _, s := range statistics {
+	for _, s := range statistics.Data {
 		author := Capitalize(s.Who)
 		_, ok := aggreg[author]
 		if ok {
@@ -150,7 +130,7 @@ func AggregByAuthor(statistics Statistics) Statistics {
 		} else {
 			aggreg[author] = &Statistic{
 				When:          time.Unix(0, 0),
-				Who:           strings.ToLower(s.Email),
+				Who:           s.Who,
 				Email:         s.Email,
 				Commits:       s.Commits,
 				ModifiedFiles: s.ModifiedFiles,
@@ -160,20 +140,27 @@ func AggregByAuthor(statistics Statistics) Statistics {
 		}
 	}
 
-	results := make(Statistics, 0, len(aggreg))
-	for _, s := range aggreg {
-		results = append(results, s)
+	results := Statistics{
+		HasWhen:    false,
+		HasWho:     true,
+		HasEmail:   true,
+		HasID:      false,
+		HasMessage: false,
+		Data:       []*Statistic{},
 	}
-	sort.Slice(results, func(i, j int) bool {
-		return strings.Compare(results[i].Who, results[j].Who) < 0
+	for _, s := range aggreg {
+		results.Data = append(results.Data, s)
+	}
+	sort.Slice(results.Data, func(i, j int) bool {
+		return strings.Compare(results.Data[i].Who, results.Data[j].Who) < 0
 	})
-	return results
+	return &results
 }
 
-func HeatMapDayHour(statistics Statistics) map[time.Weekday]map[int]*Statistic {
+func HeatMapDayHour(statistics *Statistics) map[time.Weekday]map[int]*Statistic {
 	aggreg := map[time.Weekday]map[int]*Statistic{}
 
-	for _, s := range statistics {
+	for _, s := range statistics.Data {
 		weekday := truncateToDay(s.When).Weekday()
 		hour := s.When.Hour()
 		_, ok := aggreg[weekday]
@@ -223,4 +210,25 @@ func HeatMapDayHour(statistics Statistics) map[time.Weekday]map[int]*Statistic {
 		}
 	}
 	return aggreg
+}
+
+func SortStats(statistics *Statistics, by, direction string) {
+	dir := strings.ToLower(strings.TrimSpace(direction))
+
+	switch by {
+	case "author":
+		sort.Slice(statistics.Data, func(i, j int) bool {
+			if dir == "desc" {
+				return strings.Compare(statistics.Data[i].Who, statistics.Data[j].Who) > 0
+			}
+			return strings.Compare(statistics.Data[i].Who, statistics.Data[j].Who) < 0
+		})
+	default:
+		sort.Slice(statistics.Data, func(i, j int) bool {
+			if dir == "desc" {
+				return (statistics.Data[i].When.UnixNano() > statistics.Data[j].When.UnixNano())
+			}
+			return (statistics.Data[i].When.UnixNano() < statistics.Data[j].When.UnixNano())
+		})
+	}
 }

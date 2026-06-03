@@ -13,15 +13,8 @@ A command-line tool written in Go that produces statistics for a Git repository.
 - **List commits** — Display all commits with author, email, date, additions, deletions, and file count.
 - **Aggregate by day** — Group commit statistics per calendar day.
 - **Aggregate by author** — Group commit statistics per author.
-- **Heatmap** — Generate a day/hour heatmap of commit activity (function available, not exposed via CLI).
-
-## Installation
-
-```bash
-make build
-```
-
-The binary is output to `bin/gitstats`.
+- **Heatmap** — Generate a day/hour heatmap of commit activity.
+- **List tags** — Display all tags with hash, author, and date.
 
 ## Usage
 
@@ -29,12 +22,15 @@ The binary is output to `bin/gitstats`.
 gitstats [command] [options]
 ```
 
-### Options
+### Global options
 
 | Flag | Alias | Description |
 | ------ | ------- | ------------- |
-| `--path` | `-p` | Path to a local Git repository (must contain a `.git` folder). Defaults to current directory. |
+| `--path` | `-p` | Path to a local Git repository. Defaults to current directory. |
 | `--url` | `-u` | URL of a remote Git repository to clone. |
+| `--since` | `--after` | Include commits after this date (format: `2006-01-02` or `2006/01/02`). |
+| `--until` | `--before` | Include commits before this date (format: `2006-01-02` or `2006/01/02`). |
+| `--sort` | | Sort direction: `asc` (default) or `desc`. |
 | `--version` | | Show version and build date. |
 
 ### Commands
@@ -45,6 +41,7 @@ List all commits of the repository.
 
 ```bash
 gitstats commits --path /path/to/repo
+gitstats commits --since 2024-01-01 --until 2024-06-30
 ```
 
 #### `day`
@@ -52,7 +49,7 @@ gitstats commits --path /path/to/repo
 Aggregate commit statistics by day.
 
 ```bash
-gitstats day --path /path/to/repo
+gitstats day --path /path/to/repo --sort desc
 ```
 
 #### `author`
@@ -63,6 +60,22 @@ Aggregate commit statistics by author.
 gitstats author --path /path/to/repo
 ```
 
+#### `heatmap`
+
+Generate a day-of-week / hour heatmap of commit activity.
+
+```bash
+gitstats heatmap --path /path/to/repo
+```
+
+#### `tags`
+
+List all tags of the repository.
+
+```bash
+gitstats tags --path /path/to/repo
+```
+
 ### Remote repository
 
 You can pass a URL instead of a local path:
@@ -70,16 +83,6 @@ You can pass a URL instead of a local path:
 ```bash
 gitstats commits --url https://github.com/user/repo.git
 ```
-
-## Output format
-
-Output is printed to stdout in a pipe-delimited format:
-
-```txt
-date|id|author|email|commits|files|additions|deletions|total_lines|message
-```
-
-Fields that are empty or zero may be omitted depending on the command.
 
 ## Excluded paths
 
@@ -104,6 +107,9 @@ The following paths are excluded from file counts by default:
 | -------- | ------------- |
 | `make build` | Build the binary |
 | `make test` | Run tests |
-| `make lint` | Run linter |
-| `make clean` | Remove build artifacts |
+| `make lint` | Run golangci-lint |
+| `make critic` | Run go-critic |
+| `make deadcode` | Run deadcode detection |
+| `make doc` | Start godoc server on `:8085` |
+| `make clean` | Remove build artifacts and vendor |
 | `make install-tools` | Install development tools |

@@ -4,53 +4,161 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/alexeyco/simpletable"
+	"github.com/jftuga/ellipsis"
 )
 
-func PrintStatitics(statistics Statistics, timeFormat string) {
-	for _, s := range statistics {
-		fields := []string{}
-		if s.When.UnixNano() > 0 {
-			fields = append(fields, s.When.Local().Format(timeFormat))
+func PrintStatistics(statistics *Statistics, timeFormat string) {
+	table := simpletable.New()
+	table.SetStyle(simpletable.StyleCompactLite)
+
+	if statistics.HasWhen {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: "WHEN"})
+	}
+	if statistics.HasID {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: "ID"})
+	}
+	if statistics.HasWho {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: "WHO"})
+	}
+	if statistics.HasEmail {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: "EMAIL"})
+	}
+	table.Header.Cells = append(table.Header.Cells,
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "COMMITS"},
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "FILES"},
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "ADDITIONS"},
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "DELETIONS"},
+	)
+	if statistics.HasMessage {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: "MESSAGE"})
+	}
+
+	for _, s := range statistics.Data {
+		line := []*simpletable.Cell{}
+
+		if statistics.HasWhen {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignLeft,
+				Text:  s.When.Local().Format(timeFormat),
+			})
 		}
-		if s.ID != "" {
-			fields = append(fields, s.ID)
+		if statistics.HasID {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignLeft,
+				Text:  s.ID,
+			})
 		}
-		if s.Who != "" {
-			fields = append(fields, s.Who)
+		if statistics.HasWho {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignLeft,
+				Text:  ellipsis.Shorten(s.Who, 32),
+			})
 		}
-		if s.Email != "" {
-			fields = append(fields, s.Email)
+		if statistics.HasEmail {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignLeft,
+				Text:  ellipsis.Shorten(s.Email, 32),
+			})
 		}
-		fields = append(fields,
-			strconv.FormatInt(s.Commits, 10),
-			strconv.FormatInt(s.ModifiedFiles, 10),
-			strconv.FormatInt(s.Additions, 10),
-			strconv.FormatInt(s.Deletions, 10),
+		line = append(line,
+			&simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  strconv.FormatInt(s.Commits, 10),
+			},
+			&simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  strconv.FormatInt(s.ModifiedFiles, 10),
+			},
+			&simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  strconv.FormatInt(s.Additions, 10),
+			},
+			&simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  strconv.FormatInt(s.Deletions, 10),
+			},
 		)
-		if s.TotalLines != 0 {
-			fields = append(fields, strconv.FormatInt(s.TotalLines, 10))
-		}
-		if s.Message != "" {
-			fields = append(fields, s.Message)
+		if statistics.HasMessage {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignLeft,
+				Text:  s.Message,
+			})
 		}
 
-		fmt.Fprintln(os.Stdout, strings.Join(fields, separator))
+		table.Body.Cells = append(table.Body.Cells, line)
 	}
+
+	fmt.Fprintln(os.Stdout, table.String())
 }
 
-func PrintHeatMapDayHour(heatMap map[time.Weekday]map[int]*Statistic) {
-	fmt.Fprintf(os.Stdout, "Hour%s", separator)
-	for j := range 24 {
-		fmt.Fprintf(os.Stdout, "%02d|", j)
-	}
-	fmt.Fprintln(os.Stdout)
-	for i := time.Sunday; i <= time.Saturday; i++ {
-		fmt.Fprintf(os.Stdout, "%v%s", i, separator)
-		for j := range 24 {
-			fmt.Fprintf(os.Stdout, "%v%s", heatMap[i][j].Commits, separator)
+func PrintHeatMapDayHour(
+	heatMap map[time.Weekday]map[int]*Statistic,
+	display func(stat *Statistic) string,
+) {
+	disp := display
+	if disp == nil {
+		disp = func(stat *Statistic) string {
+			return strconv.FormatInt(stat.Commits, 10)
 		}
-		fmt.Fprintln(os.Stdout)
 	}
+
+	table := simpletable.New()
+	table.SetStyle(simpletable.StyleCompactLite)
+
+	table.Header.Cells = append(table.Header.Cells,
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "Day\\Hour"})
+
+	for j := range 24 {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: strconv.Itoa(j)})
+	}
+	for i := time.Sunday; i <= time.Saturday; i++ {
+		line := make([]*simpletable.Cell, 0, 25)
+
+		line = append(line, &simpletable.Cell{
+			Align: simpletable.AlignLeft,
+			Text:  i.String(),
+		})
+		for j := range 24 {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  disp(heatMap[i][j]),
+			})
+		}
+		table.Body.Cells = append(table.Body.Cells, line)
+	}
+
+	fmt.Fprintln(os.Stdout, table.String())
+}
+
+func PrintTags(tags Tags, timeFormat string) {
+	table := simpletable.New()
+	table.SetStyle(simpletable.StyleCompactLite)
+
+	table.Header = &simpletable.Header{
+		Cells: []*simpletable.Cell{
+			{Align: simpletable.AlignCenter, Text: "NAME"},
+			{Align: simpletable.AlignCenter, Text: "HASH"},
+			{Align: simpletable.AlignCenter, Text: "AUTHOR"},
+			{Align: simpletable.AlignCenter, Text: "WHEN"},
+		},
+	}
+
+	for _, t := range tags {
+		table.Body.Cells = append(table.Body.Cells, []*simpletable.Cell{
+			{Align: simpletable.AlignLeft, Text: t.Name},
+			{Align: simpletable.AlignLeft, Text: t.ID},
+			{Align: simpletable.AlignLeft, Text: ellipsis.Shorten(t.Author, 32)},
+			{Align: simpletable.AlignLeft, Text: t.When.Local().Format(timeFormat)},
+		})
+	}
+	fmt.Fprintln(os.Stdout, table.String())
 }
