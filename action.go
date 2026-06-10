@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v3"
@@ -17,8 +18,9 @@ func cmdListCommits(flags []cli.Flag) *cli.Command {
 			if err != nil {
 				return err
 			}
+			author := strings.ToLower(cmd.String("author"))
 			s, u := parseTimes(cmd)
-			commits, err := RetrieveCommits(repo, s, u)
+			commits, err := RetrieveCommits(repo, author, s, u)
 			if err != nil {
 				return err
 			}
@@ -41,8 +43,9 @@ func cmdByDay(flags []cli.Flag) *cli.Command {
 			if err != nil {
 				return err
 			}
+			author := strings.ToLower(cmd.String("author"))
 			s, u := parseTimes(cmd)
-			commits, err := RetrieveCommits(repo, s, u)
+			commits, err := RetrieveCommits(repo, author, s, u)
 			if err != nil {
 				return err
 			}
@@ -66,8 +69,9 @@ func cmdByAuthor(flags []cli.Flag) *cli.Command {
 			if err != nil {
 				return err
 			}
+			author := strings.ToLower(cmd.String("author"))
 			s, u := parseTimes(cmd)
-			commits, err := RetrieveCommits(repo, s, u)
+			commits, err := RetrieveCommits(repo, author, s, u)
 			if err != nil {
 				return err
 			}
@@ -91,8 +95,9 @@ func cmdHeatMap(flags []cli.Flag) *cli.Command {
 			if err != nil {
 				return err
 			}
+			author := strings.ToLower(cmd.String("author"))
 			s, u := parseTimes(cmd)
-			commits, err := RetrieveCommits(repo, s, u)
+			commits, err := RetrieveCommits(repo, author, s, u)
 			if err != nil {
 				return err
 			}

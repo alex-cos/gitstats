@@ -41,6 +41,12 @@ func parseCLI() error {
 				Aliases:  []string{"u"},
 				Required: false,
 			},
+			&cli.StringFlag{
+				Name:     "author",
+				Usage:    "filter stats for a given author",
+				Aliases:  []string{"a"},
+				Required: false,
+			},
 			&cli.TimestampFlag{
 				Name:     "since",
 				Usage:    "commits to retrieve since the given date",
@@ -62,6 +68,7 @@ func parseCLI() error {
 			&cli.StringFlag{
 				Name:        "sort",
 				Usage:       "sort direction ['asc' for ascending, 'desc' for descending]",
+				Aliases:     []string{"s"},
 				Required:    false,
 				DefaultText: "asc",
 			},

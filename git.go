@@ -37,7 +37,7 @@ func Repository(path, url string) (*git.Repository, error) {
 	return localRepo(".")
 }
 
-func RetrieveCommits(repo *git.Repository, since, until *time.Time) (Commits, error) {
+func RetrieveCommits(repo *git.Repository, author string, since, until *time.Time) (Commits, error) {
 	ref, err := repo.Head()
 	if err != nil {
 		return nil, err
@@ -54,6 +54,10 @@ func RetrieveCommits(repo *git.Repository, since, until *time.Time) (Commits, er
 		if err != nil {
 			return err
 		}
+		authorName := strings.ToLower(c.Author.Name)
+		if author != "" && author != authorName {
+			return nil
+		}
 		stats := make(FileStats, 0, len(fs))
 		for _, s := range fs {
 			stats = append(stats, FileStat{
@@ -64,7 +68,7 @@ func RetrieveCommits(repo *git.Repository, since, until *time.Time) (Commits, er
 		}
 		commits = append(commits, &Commit{
 			When:      c.Author.When,
-			Who:       strings.ToLower(c.Author.Name),
+			Who:       authorName,
 			Email:     strings.ToLower(c.Author.Email),
 			ID:        c.ID().String(),
 			Message:   c.Message,

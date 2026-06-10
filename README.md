@@ -28,9 +28,10 @@ gitstats [command] [options]
 | ------ | ------- | ------------- |
 | `--path` | `-p` | Path to a local Git repository. Defaults to current directory. |
 | `--url` | `-u` | URL of a remote Git repository to clone. |
+| `--author` | `-a` | Filter commits by author name (case-insensitive). |
 | `--since` | `--after` | Include commits after this date (format: `2006-01-02` or `2006/01/02`). |
 | `--until` | `--before` | Include commits before this date (format: `2006-01-02` or `2006/01/02`). |
-| `--sort` | | Sort direction: `asc` (default) or `desc`. |
+| `--sort` | `-s` | Sort direction: `asc` (default) or `desc`. |
 | `--version` | | Show version and build date. |
 
 ### Commands
