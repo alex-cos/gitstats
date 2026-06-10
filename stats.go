@@ -1,18 +1,28 @@
 package main
 
 import (
+	"slices"
 	"sort"
 	"strings"
 	"time"
 )
 
 var (
-	excludePaths = [...]string{"public/fonts", "public/images", "node_modules", "build", "dist"}
+	excludePaths = [...]string{
+		"bin",
+		"node_modules",
+		"build",
+		"dist",
+		"tmp",
+		"vendor",
+		"__pycache__",
+	}
 )
 
 func IsInExcludePaths(path string) bool {
 	for _, excludePath := range excludePaths {
-		if strings.Contains(path, excludePath) {
+		list := strings.Split(path, "/")
+		if slices.Contains(list, excludePath) {
 			return true
 		}
 	}
@@ -197,6 +207,61 @@ func HeatMapDayHour(statistics *Statistics) map[time.Weekday]map[int]*Statistic 
 			aggreg[i] = map[int]*Statistic{}
 		}
 		for j := range 24 {
+			_, ok := aggreg[i][j]
+			if !ok {
+				aggreg[i][j] = &Statistic{
+					When:          time.Unix(0, 0),
+					Commits:       0,
+					ModifiedFiles: 0,
+					Additions:     0,
+					Deletions:     0,
+				}
+			}
+		}
+	}
+	return aggreg
+}
+
+func HeatMapMonthDay(statistics *Statistics) map[time.Month]map[time.Weekday]*Statistic {
+	aggreg := map[time.Month]map[time.Weekday]*Statistic{}
+
+	for _, s := range statistics.Data {
+		month := s.When.Month()
+		weekday := truncateToDay(s.When).Weekday()
+		_, ok := aggreg[month]
+		if ok {
+			_, ok := aggreg[month][weekday]
+			if ok {
+				aggreg[month][weekday].Commits += s.Commits
+				aggreg[month][weekday].ModifiedFiles += s.ModifiedFiles
+				aggreg[month][weekday].Additions += s.Additions
+				aggreg[month][weekday].Deletions += s.Deletions
+			} else {
+				aggreg[month][weekday] = &Statistic{
+					When:          time.Unix(0, 0),
+					Commits:       s.Commits,
+					ModifiedFiles: s.ModifiedFiles,
+					Additions:     s.Additions,
+					Deletions:     s.Deletions,
+				}
+			}
+		} else {
+			aggreg[month] = map[time.Weekday]*Statistic{}
+			aggreg[month][weekday] = &Statistic{
+				When:          time.Unix(0, 0),
+				Commits:       s.Commits,
+				ModifiedFiles: s.ModifiedFiles,
+				Additions:     s.Additions,
+				Deletions:     s.Deletions,
+			}
+		}
+	}
+	for i := time.January; i <= time.December; i++ {
+		_, ok := aggreg[i]
+		if !ok {
+			aggreg[i] = map[time.Weekday]*Statistic{}
+		}
+		for j := time.Sunday; j <= time.Saturday; j++ {
 			_, ok := aggreg[i][j]
 			if !ok {
 				aggreg[i][j] = &Statistic{

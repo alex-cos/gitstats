@@ -84,7 +84,8 @@ func parseCLI() error {
 		cmdListCommits(appcmd.Flags),
 		cmdByDay(appcmd.Flags),
 		cmdByAuthor(appcmd.Flags),
-		cmdHeatMap(appcmd.Flags),
+		cmdHeatMapDayHour(appcmd.Flags),
+		cmdHeatMapMonthDay(appcmd.Flags),
 		cmdListTags(appcmd.Flags),
 	}
 

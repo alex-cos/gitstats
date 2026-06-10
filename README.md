@@ -13,7 +13,8 @@ A command-line tool written in Go that produces statistics for a Git repository.
 - **List commits** — Display all commits with author, email, date, additions, deletions, and file count.
 - **Aggregate by day** — Group commit statistics per calendar day.
 - **Aggregate by author** — Group commit statistics per author.
-- **Heatmap** — Generate a day/hour heatmap of commit activity.
+- **Heatmap day/hour** — Generate a day-of-week / hour heatmap of commit activity.
+- **Heatmap month/day** — Generate a month / day-of-week heatmap of commit activity.
 - **List tags** — Display all tags with hash, author, and date.
 
 ## Usage
@@ -61,12 +62,20 @@ Aggregate commit statistics by author.
 gitstats author --path /path/to/repo
 ```
 
-#### `heatmap`
+#### `hm-day`
 
-Generate a day-of-week / hour heatmap of commit activity.
+Generate a day-of-week / hour heatmap of commit activity (7 rows × 24 columns).
 
 ```bash
-gitstats heatmap --path /path/to/repo
+gitstats hm-day --path /path/to/repo
+```
+
+#### `hm-month`
+
+Generate a month / day-of-week heatmap of commit activity (12 rows × 7 columns).
+
+```bash
+gitstats hm-month --path /path/to/repo
 ```
 
 #### `tags`
@@ -89,11 +98,13 @@ gitstats commits --url https://github.com/user/repo.git
 
 The following paths are excluded from file counts by default:
 
-- `public/fonts`
-- `public/images`
+- `bin`
 - `node_modules`
 - `build`
 - `dist`
+- `tmp`
+- `vendor`
+- `__pycache__`
 
 ## Development
 

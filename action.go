@@ -85,11 +85,12 @@ func cmdByAuthor(flags []cli.Flag) *cli.Command {
 	}
 }
 
-func cmdHeatMap(flags []cli.Flag) *cli.Command {
+func cmdHeatMapDayHour(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
-		Name:      "heatmap",
-		Usage:     "aggregate git statistics by heatmap",
-		UsageText: "gitstats heatmap <options>",
+		Name:      "hm-day",
+		Usage:     "aggregate git statistics by heatmap day/hour",
+		UsageText: "gitstats hm-day <options>",
+		Aliases:   []string{"heatmap"},
 		Action: func(c context.Context, cmd *cli.Command) error {
 			repo, err := Repository(cmd.String("path"), cmd.String("url"))
 			if err != nil {
@@ -103,6 +104,31 @@ func cmdHeatMap(flags []cli.Flag) *cli.Command {
 			}
 			statistics := ProduceStats(commits)
 			PrintHeatMapDayHour(HeatMapDayHour(statistics), nil)
+			return nil
+		},
+		Flags: flags,
+	}
+}
+
+func cmdHeatMapMonthDay(flags []cli.Flag) *cli.Command {
+	return &cli.Command{
+		Name:      "hm-month",
+		Usage:     "aggregate git statistics by heatmap month/day",
+		UsageText: "gitstats hm-month <options>",
+		Aliases:   []string{"heatmap2"},
+		Action: func(c context.Context, cmd *cli.Command) error {
+			repo, err := Repository(cmd.String("path"), cmd.String("url"))
+			if err != nil {
+				return err
+			}
+			author := strings.ToLower(cmd.String("author"))
+			s, u := parseTimes(cmd)
+			commits, err := RetrieveCommits(repo, author, s, u)
+			if err != nil {
+				return err
+			}
+			statistics := ProduceStats(commits)
+			PrintHeatMapMonthDay(HeatMapMonthDay(statistics), nil)
 			return nil
 		},
 		Flags: flags,

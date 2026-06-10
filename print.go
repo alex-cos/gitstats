@@ -139,6 +139,46 @@ func PrintHeatMapDayHour(
 	fmt.Fprintln(os.Stdout, table.String())
 }
 
+func PrintHeatMapMonthDay(
+	heatMap map[time.Month]map[time.Weekday]*Statistic,
+	display func(stat *Statistic) string,
+) {
+	disp := display
+	if disp == nil {
+		disp = func(stat *Statistic) string {
+			return strconv.FormatInt(stat.Commits, 10)
+		}
+	}
+
+	table := simpletable.New()
+	table.SetStyle(simpletable.StyleCompactLite)
+
+	table.Header.Cells = append(table.Header.Cells,
+		&simpletable.Cell{Align: simpletable.AlignCenter, Text: "Month\\Day"})
+
+	for j := time.Sunday; j <= time.Saturday; j++ {
+		table.Header.Cells = append(table.Header.Cells,
+			&simpletable.Cell{Align: simpletable.AlignCenter, Text: j.String()})
+	}
+	for i := time.January; i <= time.December; i++ {
+		line := make([]*simpletable.Cell, 0, 25)
+
+		line = append(line, &simpletable.Cell{
+			Align: simpletable.AlignLeft,
+			Text:  i.String(),
+		})
+		for j := time.Sunday; j <= time.Saturday; j++ {
+			line = append(line, &simpletable.Cell{
+				Align: simpletable.AlignRight,
+				Text:  disp(heatMap[i][j]),
+			})
+		}
+		table.Body.Cells = append(table.Body.Cells, line)
+	}
+
+	fmt.Fprintln(os.Stdout, table.String())
+}
+
 func PrintTags(tags Tags, timeFormat string) {
 	table := simpletable.New()
 	table.SetStyle(simpletable.StyleCompactLite)
