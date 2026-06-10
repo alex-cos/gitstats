@@ -3,7 +3,7 @@ GOLINT         := golangci-lint
 MAINMODULE     := gitstats
 GOOS           := $(shell go env GOOS)
 GIT_TAG_NAME   ?= $(shell git describe --abbrev=1 --tags 2>/dev/null || git describe --always)
-SHORT_TAG_NAME ?= $(shell git describe --abbrev=0 --tags 2>/dev/null | sed -rn 's/([0-9]+(.[0-9]+){2}).*/\1/p')
+SHORT_TAG_NAME ?= $(shell git describe --abbrev=0 --tags 2>/dev/null | sed -rn 's/(v)?([0-9]+(.[0-9]+){2}).*/\2/p')
 BRANCH_NAME    ?= $(shell git rev-parse --abbrev-ref HEAD)
 BUILDDATE      ?= $(shell date '+%Y-%m-%d')
 TARGET_DIR     ?= ./bin
@@ -12,7 +12,7 @@ BUILD_VERSION  ?= 0.0.0
 BINARY_EXT     := ""
 
 ifeq ($(BUILD_VERSION), 0.0.0)
-	ifdef  $(SHORT_TAG_NAME)
+	ifdef SHORT_TAG_NAME
 		BUILD_VERSION = $(SHORT_TAG_NAME)
 	else 
 	  BUILD_VERSION = 1.0.0
